@@ -43,7 +43,7 @@ function App() {
 
   useEffect(() => {
     getPublicBusinessSettings().then((settings) => {
-      if (settings?.whatsapp_number) setWhatsappNumber(settings.whatsapp_number.replace(/\D/g, ''));
+      if (settings?.whatsapp_number) setWhatsappNumber(WHATSAPP_NUMBER);
     });
     const savedLang = localStorage.getItem(LANG_KEY) as LanguageCode | null;
     if (savedLang) setLang(savedLang);
@@ -82,6 +82,16 @@ function App() {
     setErrors({});
     setPhase(p);
   }
+
+  function startNewAssessment() {
+  setAnswers(emptyAnswers);
+  setBody(emptyBody);
+  setPersonal(emptyPersonal);
+  setPrivacyAgreed(false);
+  setErrors({});
+  setLeadSaved(false);
+  setPhase('landing');
+} 
 
   function validatePersonal(): boolean {
     const e: Record<string, string> = {};
@@ -499,7 +509,13 @@ function App() {
         )}
 
         {phase === 'report' && (
-          <ReportView report={report} bmi={bmi} personal={personal} onReady={() => setPhase('ready')} onBack={handleBack} t={t} />
+          <ReportView report={report}
+          bmi={bmi}
+          personal={personal}
+          onReady={() => setPhase('ready')}
+          onBack={handleBack}
+          onNewAssessment={startNewAssessment}
+          t={t} />
         )}
 
         {phase === 'ready' && (
@@ -587,12 +603,13 @@ function FeatureCard({ icon, title }: { icon: React.ReactNode; title: string }) 
   );
 }
 
-function ReportView({ report, bmi, personal, onReady, onBack, t }: {
-  report: ReturnType<typeof buildReport>;
+function ReportView({ report, bmi, personal, onReady, onBack, onNewAssessment, t }: {
+    report: ReturnType<typeof buildReport>;
   bmi: number | null;
   personal: PersonalInfo;
   onReady: () => void;
   onBack: () => void;
+  onNewAssessment: () => void;
   t: ReturnType<typeof getTranslation>;
 }) {
   const scoreColorHex = report.overall >= 70 ? '#059669' : report.overall >= 50 ? '#f59e0b' : '#ef4444';
@@ -683,15 +700,30 @@ function ReportView({ report, bmi, personal, onReady, onBack, t }: {
       </div>
 
       <div className="flex flex-col items-center gap-3">
-        <button type="button" onClick={onReady}
-          className="w-full rounded-full bg-emerald-500 px-8 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-emerald-600 hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300">
-          🔥 {t.continue}
-        </button>
-        <button type="button" onClick={onBack}
-          className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-slate-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-200">
-          <ChevronLeft className="h-4 w-4" aria-hidden="true" /> {t.back}
-        </button>
-      </div>
+  <button
+    type="button"
+    onClick={onReady}
+    className="w-full rounded-full bg-emerald-500 px-8 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-emerald-600 hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
+  >
+    🔥 {t.continue}
+  </button>
+
+  <button
+    type="button"
+    onClick={onNewAssessment}
+    className="w-full rounded-full border-2 border-emerald-500 px-8 py-4 text-base font-bold text-emerald-600 transition-all hover:bg-emerald-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
+  >
+    🔄 Start New Assessment
+  </button>
+
+  <button
+    type="button"
+    onClick={onBack}
+    className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-slate-500 transition-colors hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-200"
+  >
+    <ChevronLeft className="h-4 w-4" aria-hidden="true" /> {t.back}
+  </button>
+</div>
     </div>
   );
 }
